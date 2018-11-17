@@ -36,7 +36,7 @@ class data_tree(object):
              for b in branches:
                  self._tree[b] = []
 
-     def add_branch(self, name, content=[]):
+     def add_branch(self, name, content=None):
          '''
          Add a new branch to the data tree
 
@@ -51,7 +51,7 @@ class data_tree(object):
  
          content (list of any type)      Data to store in branch
          '''
-         self._tree[name] = [i for i in content] if not isinstance(content, list) else content
+         self._tree[name] = list(content) if content else []
 
      def fill(self, values):
          '''
@@ -68,12 +68,21 @@ class data_tree(object):
          for v, branch in zip(values, self._tree):
              self._tree[branch].append(v)
 
+     def _fill_branch(self, branch, value):
+         self._tree[branch].append(value)
+
      def getN(self):
          '''Get Number of Entries in Data Tree'''
          try:
              return len(list(self._tree.values())[0])
          except IndexError:
              return None
+ 
+     def getBranch(self, branch):
+         return self._tree[branch]
+
+     def getBranches(self):
+         return list(self._tree.keys())
 
      def getEntry(self, i):
          '''Return the values for the i-th entry in the Data Tree'''
