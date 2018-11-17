@@ -1,15 +1,15 @@
 from hepgen.decays import decay_table 
+from hepgen.data_tree import data_tree
 from scipy.stats import expon
 
-def run_gen(decay_id):
+def run_gen(decay_id, tree=None, nevts=1):
+    _tree  = data_tree('DecayTree_{}'.format(decay_id) if not tree else tree)
     _decay = decay_table(decay_id)
     assert _decay
-    _res_dict = {'{}_TAU'.format(_decay.Mother.name) : expon.rvs(scale=_decay.Mother.lifetime)}
+    _tree.add_branch('{}_TAU'.format(_decay.Mother.name), 
+                     expon.rvs(size=nevts, scale=_decay.Mother.lifetime))
     for daughter in _decay.Daughters:
-        _res_dict['{}_TAU'.format(daughter.name)] = expon.rvs(scale=daughter.lifetime)
+        _tree.add_branch('{}_TAU'.format(daughter.name),
+                     expon.rvs(size=nevts, scale=daughter.lifetime))
 
-    print(_res_dict)
-
-
-if __name__ in "__main__":
-    run_gen('SK020001')
+    return _tree

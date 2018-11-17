@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name                =  'HEPGen'                                      ,
-      version             =  '1.0.0'                                       ,
+      version             =  '0.1.0'                                       ,
       description         =  'Particle Physics Monte Carlo.'               ,
       url                 =  ''                                            ,
       author              =  'Kristian Zarebski'                           ,
@@ -9,5 +9,6 @@ setup(name                =  'HEPGen'                                      ,
       license             =  'MIT'                                         ,
       packages            =  ['hepgen']                                    ,
       zip_safe            =  False                                         ,
+      include_package_data = True                                          ,
       install_requires    =  []
      )

@@ -1,6 +1,6 @@
 from hepgen import particle
 import os
-_mod_loc = os.path.abspath(__file__).replace(__file__, '')
+_mod_loc = os.path.abspath(__file__).replace('decays.py', '')
 
 def get_particle(symbol):
     _dict = {'*' : 'star', '+' : 'plus',
@@ -23,7 +23,6 @@ class DecayList:
         self._parse_decay_files()
 
     def __call__(self, _id):
-        print(list(self._decays.keys()))
         for d in self._decays:
             if self._decays[d].ID == _id:
                 return self._decays[d]
@@ -41,7 +40,7 @@ class DecayList:
         import os
         _files = glob(os.path.join(os.path.join(_mod_loc, 'decay_files'), '*.dcf'))
 
-        assert len(_files) > 0
+        assert len(_files) > 0, "No Decay Files Found {}".format(os.path.join(os.path.join(_mod_loc, 'decay_files'), '*.dcf'))
      
         for file_addr in _files:
            _tmp = {}
