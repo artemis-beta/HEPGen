@@ -2,7 +2,7 @@ from hepgen.decays import decay_table
 from hepgen.data_tree import data_tree
 from hepgen import __version__
 from pktools.PKLorentzVector import PKLorentzVector
-from scipy.stats import expon
+from scipy.stats import expon, norm
 from random import uniform
 from math import pi, atan, log, tan
 
@@ -38,7 +38,7 @@ class HEPGen(object):
     def _prepare_tree(self, treename):
         self._logger.info("\tCreating new data tree '{}'".format(treename))
         _tree = data_tree('DecayTree_{}'.format(self._dec.ID) if not treename else treename)
-        for var in ['TAU', 'PX', 'THETA', 'PHI', 'P', 'PE', 'PY', 'PZ', 'PT', 'ETA']:
+        for var in ['TAU', 'PX', 'THETA', 'PHI', 'P', 'PE', 'PY', 'PZ', 'PT', 'ETA', 'M']:
             _tree.add_branch('{}_{}'.format(self._dec.Mother.name, var))
             for daughter in self._dec.Daughters:
                 _tree.add_branch('{}_{}'.format(daughter.name, var))
@@ -63,23 +63,35 @@ class HEPGen(object):
 
         P_m = PKLorentzVector(self._dec.Mother.mass, 0, 0, 0)
 
-        self._tree._fill_branch('{}_PX'.format(self._dec.Mother.name), P_m.X[1].value)
-        
-        self._tree._fill_branch('{}_PY'.format(self._dec.Mother.name), P_m.X[2].value)
-        self._tree._fill_branch('{}_PZ'.format(self._dec.Mother.name), P_m.X[3].value)
-        self._tree._fill_branch('{}_P'.format(self._dec.Mother.name), pow(P_m.X[3].value**2+P_m.X[1].value**2+P_m.X[2].value**2, 0.5))
-        _M_pt = pow(P_m.X[1].value**2+P_m.X[2].value**2, 0.5)
- 
-        _M_theta = atan(_M_pt/float(P_m.X[3].value)) if P_m.X[3].value != 0 else -9999
+        _meas_px = P_m.X[1].value
+        _meas_py = P_m.X[2].value
+        _meas_pz = P_m.X[3].value
 
-        _M_phi = atan(P_m.X[1].value/float(P_m.X[2].value)) if P_m.X[2].value != 0 else -9999
+        _meas_pe = P_m.X[0].value
+
+        _m = P_m.getMagnitude()
+        print(_m)
+
+        self._tree._fill_branch('{}_PE'.format(self._dec.Mother.name), _meas_pe)
+
+        self._tree._fill_branch('{}_PX'.format(self._dec.Mother.name), _meas_px)
+        self._tree._fill_branch('{}_M'.format(self._dec.Mother.name), _m)
+        
+        self._tree._fill_branch('{}_PY'.format(self._dec.Mother.name), _meas_py)
+        self._tree._fill_branch('{}_PZ'.format(self._dec.Mother.name), _meas_pz)
+        self._tree._fill_branch('{}_P'.format(self._dec.Mother.name), pow(_meas_px**2+_meas_py**2+_meas_pz**2, 0.5))
+        _M_pt = pow(_meas_px**2+_meas_py**2, 0.5)
+ 
+        _M_theta = atan(_M_pt/float(_meas_pz)) if _meas_pz != 0 else -9999
+
+        _M_phi = atan(_meas_px/float(_meas_py)) if _meas_py != 0 else -9999
 
         _totE = self._dec.Mother.mass #Start with mass of the mother as total available energy
 
         tot_p_x_sq = uniform(0, _totE**2)
-        _totE = pow(_totE**2-tot_p_x_sq**2, 0.5)
+        _totE = pow(_totE**2-tot_p_x_sq, 0.5)
         tot_p_y_sq = uniform(0, _totE**2)
-        tot_p_z_sq = pow(_totE**2-tot_p_y_sq**2, 0.5)
+        tot_p_z_sq = pow(_totE**2-tot_p_y_sq, 0.5)
 
         p_x_sq = uniform(0, tot_p_x_sq)
         p_y_sq = uniform(0, tot_p_y_sq)
@@ -91,15 +103,23 @@ class HEPGen(object):
         self._tree._fill_branch('{}_PHI'.format(self._dec.Mother.name), _M_phi)
 
         _D0 = PKLorentzVector(pow(self._dec.Daughters[0].mass**2+p_x_sq+p_y_sq+p_z_sq, 0.5), sq_rt(p_x_sq), sq_rt(p_y_sq), sq_rt(p_z_sq)) #First Daughter can take any values from the range
-        self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[0].name), _D0.X[1].value)
-        self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[0].name), _D0.X[2].value)
-        self._tree._fill_branch('{}_PZ'.format(self._dec.Daughters[0].name), _D0.X[3].value)
-        self._tree._fill_branch('{}_P'.format(self._dec.Daughters[0].name), pow(_D0.X[3].value**2+_D0.X[1].value**2+_D0.X[2].value**2, 0.5))
-        _D0_pt = pow(_D0.X[1].value**2+_D0.X[2].value**2, 0.5)
+        _meas_px = _D0.X[1].value
+        _meas_py = _D0.X[2].value
+        _meas_pz = _D0.X[3].value
+        _meas_pe = _D0.X[0].value
+        _m = _D0.getMagnitude()
+        print(_m)
+        self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[0].name), _meas_px)
+        self._tree._fill_branch('{}_M'.format(self._dec.Daughters[0].name), _m)
+        self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[0].name), _meas_py)
+        self._tree._fill_branch('{}_PZ'.format(self._dec.Daughters[0].name), _meas_pz)
+        self._tree._fill_branch('{}_PE'.format(self._dec.Daughters[0].name), _meas_pe)
+        self._tree._fill_branch('{}_P'.format(self._dec.Daughters[0].name), pow(_meas_pz**2+_meas_px**2+_meas_py**2, 0.5))
+        _D0_pt = pow(_meas_px**2+_meas_py**2, 0.5)
  
-        _D0_theta = atan(_D0_pt/float(_D0.X[3].value)) if _D0.X[3].value != 0 else -9999
+        _D0_theta = atan(_D0_pt/float(_meas_pz)) if _meas_pz != 0 else -9999
 
-        _D0_phi = atan(_D0.X[1].value/float(_D0.X[2].value)) if _D0.X[2].value != 0 else -9999
+        _D0_phi = atan(_meas_px/float(_meas_py)) if _meas_py != 0 else -9999
 
         self._tree._fill_branch('{}_PT'.format(self._dec.Daughters[0].name), _D0_pt)
         self._tree._fill_branch('{}_THETA'.format(self._dec.Daughters[0].name), _D0_theta)
@@ -122,16 +142,24 @@ class HEPGen(object):
 
             _D = PKLorentzVector(pow(self._dec.Daughters[counter].mass**2+p_x_sq+p_y_sq+p_z_sq, 0.5),
                                     sq_rt(p_x_sq), sq_rt(p_y_sq), sq_rt(p_z_sq))
+            _meas_px = _D.X[1].value
+            _meas_py = _D.X[2].value
+            _meas_pz = _D.X[3].value
+            _meas_pe = _D.X[0].value
+            _m = _D.getMagnitude()
+            print(_m)
  
-            self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[counter].name), _D.X[1].value)
-            self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[counter].name), _D.X[2].value)
-            self._tree._fill_branch('{}_PZ'.format(self._dec.Daughters[counter].name), _D.X[3].value)
-            self._tree._fill_branch('{}_P'.format(self._dec.Daughters[counter].name), pow(_D.X[3].value**2+_D.X[1].value**2+_D.X[2].value**2, 0.5))
-            _D_pt = pow(_D.X[1].value**2+_D.X[2].value**2, 0.5)
+            self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[counter].name), _meas_px)
+            self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[counter].name), _meas_py)
+            self._tree._fill_branch('{}_M'.format(self._dec.Daughters[counter].name), _m)
+            self._tree._fill_branch('{}_PZ'.format(self._dec.Daughters[counter].name), _meas_pz)
+            self._tree._fill_branch('{}_PE'.format(self._dec.Daughters[counter].name), _meas_pe)
+            self._tree._fill_branch('{}_P'.format(self._dec.Daughters[counter].name), pow(_meas_pz**2+_meas_px**2+_meas_py**2, 0.5))
+            _D_pt = pow(_meas_px**2+_meas_py**2, 0.5)
  
-            _D_theta = atan(_D_pt/float(_D.X[3].value)) if _D.X[3].value != 0 else -9999
+            _D_theta = atan(_D_pt/float(_meas_pz)) if _meas_pz != 0 else -9999
 
-            _D_phi = atan(_D.X[1].value/float(_D.X[2].value)) if _D.X[2].value != 0 else -9999
+            _D_phi = atan(_meas_px/float(_meas_py)) if _meas_py != 0 else -9999
 
             self._tree._fill_branch('{}_PT'.format(self._dec.Daughters[counter].name), _D_pt)
             self._tree._fill_branch('{}_THETA'.format(self._dec.Daughters[counter].name), _D_theta)
@@ -142,15 +170,23 @@ class HEPGen(object):
 
             counter += 1
 
-        self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[-1].name), P_m.X[1].value)
-        self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[-1].name), P_m.X[2].value)
-        self._tree._fill_branch('{}_PZ'.format(self._dec.Daughters[-1].name), P_m.X[3].value)
-        self._tree._fill_branch('{}_P'.format(self._dec.Daughters[-1].name), pow(P_m.X[3].value**2+P_m.X[1].value**2+P_m.X[2].value**2, 0.5))
-        _D_pt = pow(P_m.X[1].value**2+P_m.X[2].value**2, 0.5)
+        _meas_px = P_m.X[1].value
+        _meas_py = P_m.X[2].value
+        _meas_pz = P_m.X[3].value
+        _meas_pe = P_m.X[0].value
+        _m = P_m.getMagnitude()
+        print(_m)
+        self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[-1].name), _meas_px)
+        self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[-1].name), _meas_py)
+        self._tree._fill_branch('{}_M'.format(self._dec.Daughters[-1].name), _m)
+        self._tree._fill_branch('{}_PZ'.format(self._dec.Daughters[-1].name), _meas_pz)
+        self._tree._fill_branch('{}_PE'.format(self._dec.Daughters[-1].name), _meas_pe)
+        self._tree._fill_branch('{}_P'.format(self._dec.Daughters[-1].name), pow(_meas_pz**2+_meas_px**2+_meas_py**2, 0.5))
+        _D_pt = pow(_meas_px**2+_meas_py**2, 0.5)
  
-        _D_theta = atan(_D_pt/float(P_m.X[3].value)) if P_m.X[3].value != 0 else -9999
+        _D_theta = atan(_D_pt/float(_meas_pz)) if _meas_pz != 0 else -9999
 
-        _D_phi = atan(P_m.X[1].value/float(P_m.X[2].value)) if P_m.X[2].value != 0 else -9999
+        _D_phi = atan(_meas_px/float(_meas_py)) if _meas_py != 0 else -9999
 
         self._tree._fill_branch('{}_PT'.format(self._dec.Daughters[-1].name), _D_pt)
         self._tree._fill_branch('{}_THETA'.format(self._dec.Daughters[-1].name), _D_theta)

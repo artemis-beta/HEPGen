@@ -16,7 +16,7 @@ class particle(object):
           self.symbol   = _part.name
           self.name     = convert_name(_part.name)
           self.charge   = _part.charge
-          self.mass     = _part.mass
+          self.mass     = _part.mass*1000. #MeV
           self.lifetime = _part.get_lifetime()
 
 class ParticleList(object):
