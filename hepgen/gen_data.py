@@ -15,10 +15,11 @@ def sq_rt(number):
     return _vec*pow(number, 0.5)
 
 class HEPGen(object):
-    def __init__(self, decay_id, tree=None, nevts=1):
+    def __init__(self, decay_id, tree=None, nevts=1, energy=0):
         self._logger  = logging.getLogger(__class__.__name__)
         self._logger.setLevel('INFO')
         self._init()
+        self._energy  = energy
         self._nevts   = nevts
         self._dec     = self._get_decay(decay_id)
         self._tree    = self._prepare_tree(tree)
@@ -59,9 +60,12 @@ class HEPGen(object):
         except ValueError:
             return -9999
 
-    def _gen_momentum(self):
+    def _gen_momentum(self, boosted=0):
+        p_x = uniform(0, boosted) if boosted != 0 else 0
+        p_y = uniform(0, pow(boosted**2-p_x**2, 0.5)) if boosted != 0 else 0
+        p_z = pow(boosted**2-p_x**2-p_y**2, 0.5) if boosted != 0 else 0
 
-        P_m = PKLorentzVector(self._dec.Mother.mass, 0, 0, 0)
+        P_m = PKLorentzVector(pow(self._dec.Mother.mass**2+p_x**2+p_y**2+p_z**2, 0.5), p_x, p_y, p_z)
 
         _meas_px = P_m.X[1].value
         _meas_py = P_m.X[2].value
@@ -70,7 +74,6 @@ class HEPGen(object):
         _meas_pe = P_m.X[0].value
 
         _m = P_m.getMagnitude()
-        print(_m)
 
         self._tree._fill_branch('{}_PE'.format(self._dec.Mother.name), _meas_pe)
 
@@ -108,7 +111,6 @@ class HEPGen(object):
         _meas_pz = _D0.X[3].value
         _meas_pe = _D0.X[0].value
         _m = _D0.getMagnitude()
-        print(_m)
         self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[0].name), _meas_px)
         self._tree._fill_branch('{}_M'.format(self._dec.Daughters[0].name), _m)
         self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[0].name), _meas_py)
@@ -147,7 +149,6 @@ class HEPGen(object):
             _meas_pz = _D.X[3].value
             _meas_pe = _D.X[0].value
             _m = _D.getMagnitude()
-            print(_m)
  
             self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[counter].name), _meas_px)
             self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[counter].name), _meas_py)
@@ -175,7 +176,6 @@ class HEPGen(object):
         _meas_pz = P_m.X[3].value
         _meas_pe = P_m.X[0].value
         _m = P_m.getMagnitude()
-        print(_m)
         self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[-1].name), _meas_px)
         self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[-1].name), _meas_py)
         self._tree._fill_branch('{}_M'.format(self._dec.Daughters[-1].name), _m)
@@ -200,5 +200,5 @@ class HEPGen(object):
             if i % 1000 == 0:
                 self._logger.info("\tGenerating Event {}/{}".format(i, self._nevts)) 
             self._gen_time()
-            self._gen_momentum()
+            self._gen_momentum(self._energy)
         return self._tree

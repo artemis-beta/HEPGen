@@ -16,6 +16,7 @@ class particle(object):
           self.symbol   = _part.name
           self.name     = convert_name(_part.name)
           self.charge   = _part.charge
+          self.ctau     = _part.ctau*1E-3 if _part.ctau else None #m
           self.mass     = _part.mass*1000. #MeV
           self.lifetime = _part.get_lifetime()
 
