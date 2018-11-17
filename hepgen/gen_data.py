@@ -4,7 +4,7 @@ from hepgen import __version__
 from pktools.PKLorentzVector import PKLorentzVector
 from scipy.stats import expon
 from random import uniform
-from math import pi, atan
+from math import pi, atan, log, tan
 
 import logging
 logging.basicConfig()
@@ -38,7 +38,7 @@ class HEPGen(object):
     def _prepare_tree(self, treename):
         self._logger.info("\tCreating new data tree '{}'".format(treename))
         _tree = data_tree('DecayTree_{}'.format(self._dec.ID) if not treename else treename)
-        for var in ['TAU', 'PX', 'THETA', 'PHI', 'P', 'PE', 'PY', 'PZ', 'PT']:
+        for var in ['TAU', 'PX', 'THETA', 'PHI', 'P', 'PE', 'PY', 'PZ', 'PT', 'ETA']:
             _tree.add_branch('{}_{}'.format(self._dec.Mother.name, var))
             for daughter in self._dec.Daughters:
                 _tree.add_branch('{}_{}'.format(daughter.name, var))
@@ -50,6 +50,14 @@ class HEPGen(object):
         for daughter in self._dec.Daughters:
             self._tree._fill_branch('{}_TAU'.format(daughter.name),
                          expon.rvs(scale=daughter.lifetime))
+
+    def _pseudorapidity(self, theta):
+        try:
+            if theta == -9999:
+                raise ValueError
+            return -log(tan(abs(theta/2.)))
+        except ValueError:
+            return -9999
 
     def _gen_momentum(self):
 
@@ -79,6 +87,7 @@ class HEPGen(object):
 
         self._tree._fill_branch('{}_PT'.format(self._dec.Mother.name), _M_pt)
         self._tree._fill_branch('{}_THETA'.format(self._dec.Mother.name), _M_theta)
+        self._tree._fill_branch('{}_ETA'.format(self._dec.Mother.name), self._pseudorapidity(_M_theta))
         self._tree._fill_branch('{}_PHI'.format(self._dec.Mother.name), _M_phi)
 
         _D0 = PKLorentzVector(pow(self._dec.Daughters[0].mass**2+p_x_sq+p_y_sq+p_z_sq, 0.5), sq_rt(p_x_sq), sq_rt(p_y_sq), sq_rt(p_z_sq)) #First Daughter can take any values from the range
@@ -94,6 +103,7 @@ class HEPGen(object):
 
         self._tree._fill_branch('{}_PT'.format(self._dec.Daughters[0].name), _D0_pt)
         self._tree._fill_branch('{}_THETA'.format(self._dec.Daughters[0].name), _D0_theta)
+        self._tree._fill_branch('{}_ETA'.format(self._dec.Daughters[0].name), self._pseudorapidity(_D0_theta))
         self._tree._fill_branch('{}_PHI'.format(self._dec.Daughters[0].name), _D0_phi)
 
 
@@ -125,6 +135,7 @@ class HEPGen(object):
 
             self._tree._fill_branch('{}_PT'.format(self._dec.Daughters[counter].name), _D_pt)
             self._tree._fill_branch('{}_THETA'.format(self._dec.Daughters[counter].name), _D_theta)
+            self._tree._fill_branch('{}_ETA'.format(self._dec.Daughters[counter].name), self._pseudorapidity(_D_theta))
             self._tree._fill_branch('{}_PHI'.format(self._dec.Daughters[counter].name), _D_phi)
   
             P_m -= _D #Remove from remaining 4-momentum
@@ -143,6 +154,7 @@ class HEPGen(object):
 
         self._tree._fill_branch('{}_PT'.format(self._dec.Daughters[-1].name), _D_pt)
         self._tree._fill_branch('{}_THETA'.format(self._dec.Daughters[-1].name), _D_theta)
+        self._tree._fill_branch('{}_ETA'.format(self._dec.Daughters[-1].name), self._pseudorapidity(_D_theta))
         self._tree._fill_branch('{}_PHI'.format(self._dec.Daughters[-1].name), _D_phi)
   
 
