@@ -40,7 +40,7 @@ class HEPGen(object):
         self._logger.info("\tCreating new data tree '{}'".format(treename))
         _tree = data_tree('DecayTree_{}'.format(self._dec.ID) if not treename else treename)
         for var in ['TAU', 'PX', 'THETA', 'PHI', 'P', 'PE', 'PY', 'PZ', 'PT', 'ETA', 'M',
-                    'FDX', 'FDY', 'FDZ', 'FD']:
+                    'FDX', 'FDY', 'FDZ', 'FD', 'OVX', 'OVY', 'OVZ', 'EVX', 'EVY', 'EVZ']:
             _tree.add_branch('{}_{}'.format(self._dec.Mother.name, var))
             for daughter in self._dec.Daughters:
                 _tree.add_branch('{}_{}'.format(daughter.name, var))
@@ -74,15 +74,28 @@ class HEPGen(object):
 
         _m = P_m.getMagnitude().value
 
+        _ov = (0,0,0) #Set origin vertex of mother to (0,0,0)
+
         _gamma = _meas_pe/_m
         _dx  = _gamma*_meas_tau*(_meas_px/_m)*_fac
         _dy  = _gamma*_meas_tau*(_meas_py/_m)*_fac
         _dz  = _gamma*_meas_tau*(_meas_pz/_m)*_fac
 
+        _evx  = _ov[0]+_dx
+        _evy  = _ov[0]+_dy
+        _evz  = _ov[0]+_dz
+
         self._tree._fill_branch('{}_PE'.format(self._dec.Mother.name), _meas_pe)
+        self._tree._fill_branch('{}_TAU'.format(self._dec.Mother.name), _meas_tau)
         self._tree._fill_branch('{}_FDX'.format(self._dec.Mother.name), _dx)
         self._tree._fill_branch('{}_FDY'.format(self._dec.Mother.name), _dy)
         self._tree._fill_branch('{}_FDZ'.format(self._dec.Mother.name), _dz)
+        self._tree._fill_branch('{}_OVX'.format(self._dec.Mother.name), _ov[0]) 
+        self._tree._fill_branch('{}_OVY'.format(self._dec.Mother.name), _ov[1])
+        self._tree._fill_branch('{}_OVZ'.format(self._dec.Mother.name), _ov[2])
+        self._tree._fill_branch('{}_EVX'.format(self._dec.Mother.name), _evx)
+        self._tree._fill_branch('{}_EVY'.format(self._dec.Mother.name), _evy)
+        self._tree._fill_branch('{}_EVZ'.format(self._dec.Mother.name), _evz)
         self._tree._fill_branch('{}_FD'.format(self._dec.Mother.name), pow(_dx**2+_dy**2+_dz**2, 0.5))
 
         self._tree._fill_branch('{}_PX'.format(self._dec.Mother.name), _meas_px)
@@ -116,7 +129,7 @@ class HEPGen(object):
         _D0 = PKLorentzVector(pow(self._dec.Daughters[0].mass**2+p_x_sq+p_y_sq+p_z_sq, 0.5), sq_rt(p_x_sq), sq_rt(p_y_sq), sq_rt(p_z_sq)) #First Daughter can take any values from the range
         _meas_px = _D0.X[1].value
         _meas_py = _D0.X[2].value
-        _meas_tau = expon.rvs(scale=self._dec.Daughters[1].lifetime)
+        _meas_tau = expon.rvs(scale=self._dec.Daughters[0].lifetime)
         _meas_pz = _D0.X[3].value
         _meas_pe = _D0.X[0].value
         _m = _D0.getMagnitude().value
@@ -125,11 +138,24 @@ class HEPGen(object):
         _dx  = _gamma*_meas_tau*(_meas_px/_m)*_fac
         _dy  = _gamma*_meas_tau*(_meas_py/_m)*_fac
         _dz  = _gamma*_meas_tau*(_meas_pz/_m)*_fac
+
+        _evx_d0 = _evx+_dx
+        _evy_d0 = _evy+_dy
+        _evz_d0 = _evz+_dz
+
         self._tree._fill_branch('{}_FDX'.format(self._dec.Daughters[0].name), _dx)
         self._tree._fill_branch('{}_FDY'.format(self._dec.Daughters[0].name), _dy)
         self._tree._fill_branch('{}_FDZ'.format(self._dec.Daughters[0].name), _dz)
         self._tree._fill_branch('{}_FD'.format(self._dec.Daughters[0].name), pow(_dx**2+_dy**2+_dz**2, 0.5))
+        self._tree._fill_branch('{}_OVX'.format(self._dec.Daughters[0].name), _evx) #Initially no offset vertices
+        self._tree._fill_branch('{}_OVY'.format(self._dec.Daughters[0].name), _evy)
+        self._tree._fill_branch('{}_OVZ'.format(self._dec.Daughters[0].name), _evz)
+        self._tree._fill_branch('{}_EVX'.format(self._dec.Daughters[0].name), _evx_d0)
+        self._tree._fill_branch('{}_EVY'.format(self._dec.Daughters[0].name), _evy_d0)
+        self._tree._fill_branch('{}_EVZ'.format(self._dec.Daughters[0].name), _evz_d0)
+
         self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[0].name), _meas_px)
+        self._tree._fill_branch('{}_TAU'.format(self._dec.Daughters[0].name), _meas_tau)
         self._tree._fill_branch('{}_M'.format(self._dec.Daughters[0].name), _m)
         self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[0].name), _meas_py)
         self._tree._fill_branch('{}_PZ'.format(self._dec.Daughters[0].name), _meas_pz)
@@ -172,11 +198,21 @@ class HEPGen(object):
             _dx  = _gamma*_meas_tau*(_meas_px/_m)*_fac
             _dy  = _gamma*_meas_tau*(_meas_py/_m)*_fac
             _dz  = _gamma*_meas_tau*(_meas_pz/_m)*_fac
+            _evx_d = _evx+_dx
+            _evy_d = _evy+_dy
+            _evz_d = _evz+_dz
             self._tree._fill_branch('{}_FDX'.format(self._dec.Daughters[counter].name), _dx)
             self._tree._fill_branch('{}_FDY'.format(self._dec.Daughters[counter].name), _dy)
             self._tree._fill_branch('{}_FDZ'.format(self._dec.Daughters[counter].name), _dz)
             self._tree._fill_branch('{}_FD'.format(self._dec.Daughters[counter].name), pow(_dx**2+_dy**2+_dz**2, 0.5))
+            self._tree._fill_branch('{}_OVX'.format(self._dec.Daughters[counter].name), _evx) #Initially no offset vertices
+            self._tree._fill_branch('{}_OVY'.format(self._dec.Daughters[counter].name), _evy)
+            self._tree._fill_branch('{}_OVZ'.format(self._dec.Daughters[counter].name), _evz)
+            self._tree._fill_branch('{}_EVX'.format(self._dec.Daughters[counter].name), _evx_d)
+            self._tree._fill_branch('{}_EVY'.format(self._dec.Daughters[counter].name), _evy_d)
+            self._tree._fill_branch('{}_EVZ'.format(self._dec.Daughters[counter].name), _evz_d)
  
+            self._tree._fill_branch('{}_TAU'.format(self._dec.Daughters[counter].name), _meas_tau)
             self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[counter].name), _meas_px)
             self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[counter].name), _meas_py)
             self._tree._fill_branch('{}_M'.format(self._dec.Daughters[counter].name), _m)
@@ -208,10 +244,20 @@ class HEPGen(object):
         _dx  = _gamma*_meas_tau*(_meas_px/_m)*_fac
         _dy  = _gamma*_meas_tau*(_meas_py/_m)*_fac
         _dz  = _gamma*_meas_tau*(_meas_pz/_m)*_fac
+        _evx_d = _evx+_dx
+        _evy_d = _evy+_dy
+        _evz_d = _evz+_dz
         self._tree._fill_branch('{}_FDX'.format(self._dec.Daughters[-1].name), _dx)
         self._tree._fill_branch('{}_FDY'.format(self._dec.Daughters[-1].name), _dy)
         self._tree._fill_branch('{}_FDZ'.format(self._dec.Daughters[-1].name), _dz)
         self._tree._fill_branch('{}_FD'.format(self._dec.Daughters[-1].name), pow(_dx**2+_dy**2+_dz**2, 0.5))
+        self._tree._fill_branch('{}_OVX'.format(self._dec.Daughters[-1].name), _evx) #Initially no offset vertices
+        self._tree._fill_branch('{}_OVY'.format(self._dec.Daughters[-1].name), _evy)
+        self._tree._fill_branch('{}_OVZ'.format(self._dec.Daughters[-1].name), _evz)
+        self._tree._fill_branch('{}_EVX'.format(self._dec.Daughters[-1].name), _evx_d)
+        self._tree._fill_branch('{}_EVY'.format(self._dec.Daughters[-1].name), _evy_d)
+        self._tree._fill_branch('{}_EVZ'.format(self._dec.Daughters[-1].name), _evz_d)
+        self._tree._fill_branch('{}_TAU'.format(self._dec.Daughters[-1].name), _meas_tau)
         self._tree._fill_branch('{}_PX'.format(self._dec.Daughters[-1].name), _meas_px)
         self._tree._fill_branch('{}_PY'.format(self._dec.Daughters[-1].name), _meas_py)
         self._tree._fill_branch('{}_M'.format(self._dec.Daughters[-1].name), _m)
