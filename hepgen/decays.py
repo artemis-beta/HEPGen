@@ -3,12 +3,7 @@ import os
 _mod_loc = os.path.abspath(__file__).replace('decays.py', '')
 
 def get_particle(symbol):
-    _dict = {'*' : 'star', '+' : 'plus',
-             '-' : 'minus'}
-    _symb = symbol
-    for d in _dict:
-        _symb = _symb.replace(d, _dict[d])
-    return getattr(particle.pdg, _symb)
+    return particle.pdg.get(symbol)
 
 class Decay(object):
     def __init__(self, _id):
