@@ -10,5 +10,5 @@ setup(name                =  'HEPGen'                                      ,
       packages            =  ['hepgen']                                    ,
       zip_safe            =  False                                         ,
       include_package_data = True                                          ,
-      install_requires    =  []
+      install_requires    =  ['pypdt', 'matplotlib', 'scipy']
      )
