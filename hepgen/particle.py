@@ -41,7 +41,6 @@ class ParticleList(object):
 
     def get(self, symb):
         for p in self:
-            print(p.symbol)
             if p.symbol == symb:
                return p
         raise AttributeError("Could not retrieve particle {}".format(symb))
