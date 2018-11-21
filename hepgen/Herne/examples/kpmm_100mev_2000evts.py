@@ -1,4 +1,4 @@
-from hepgen.Herne.Configurables import Generator
+from hepgen.Configurables import Generator
 
 Generator().OutFile = 'KPMMMC.dtf'
 Generator().OutTree = 'KPiMuMuTree'
