@@ -1,3 +1,3 @@
-pip uninstall $@ Herne
-git checkout master
-pip install --upgrade $@ .
+pip uninstall $@ Herne &&
+git checkout master &&
+pip install --upgrade $@ . -y &&
