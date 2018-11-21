@@ -14,3 +14,7 @@ Generator().DecID   = 'ID of Decay in decay_files'
 Generator().nEvts   = number_of_events
 Generator().Energy  = boost_energy_mev
 ```
+
+to run the script use the `run` script included within Herne:
+
+`run ./my_opts_scripy.py`
