@@ -1,6 +1,8 @@
 # Adds Herne compatibility for easy configuration
 
-pip install $@ git+https://github.com/artemis-beta/Herne.git &&
+git clone https://github.com/artemis-beta/Herne.git &&
+
+pip install --upgrade $@ Herne/ &&
 
 git checkout hepgen-herne &&
 
