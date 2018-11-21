@@ -3,3 +3,5 @@
 pip install $@ git+https://github.com/artemis-beta/Herne.git
 
 git checkout hepgen-herne
+
+pip install --upgrade $@ .
