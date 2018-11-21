@@ -3,6 +3,8 @@ logging.basicConfig()
 
 from Herne.AppBase import HerneApp
 
+import copy
+
 class Generator(HerneApp):
     __version__ = 'v1r0p1'
     def __init__(self):

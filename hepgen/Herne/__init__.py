@@ -1,1 +1,1 @@
-import hepgen.Herne.Configurables as Configurables
+from hepgen.Herne import Configurables as Configurables
